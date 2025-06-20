@@ -1,5 +1,5 @@
 // ====== パスワード認証機能ここから ======
-const CORRECT_PASSWORD = "hrnk0420"; // ★★★ ここに希望するパスワードを設定してください ★★★
+const CORRECT_PASSWORD = "basstab"; // ★★★ ここに希望するパスワードを設定してください ★★★
 
 document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const BASE_HYPHEN_WIDTH = 1;
         const INITIAL_MEASURES = 4;
-        const FIXED_MEASURE_CONTENT_WIDTH = 11;
+        // const FIXED_MEASURE_CONTENT_WIDTH = 11; // ★この行を削除またはコメントアウト★
 
 
         const ELEMENT_WIDTH_MAP = {
@@ -112,26 +112,31 @@ document.addEventListener('DOMContentLoaded', () => {
         function getElementDisplayWidth(element) {
             if (typeof element === 'object' && element !== null && 'f' in element) {
                 const val = typeof element.f === 'number' ? String(element.f) : element.f;
+                // テクニック記号はそれ自体では幅を持たない（前の数字に付随するため）
                 if (TECHNIQUE_SYMBOLS.includes(val.toLowerCase())) {
-                    return 0;
+                    return 0; // テクニック記号は0幅として計算
                 }
                 return ELEMENT_WIDTH_MAP[val] || 1;
             }
-            return 1;
+            return 1; // '-' など
         }
 
-        function calculateActualContentWidth(elementsInMeasure) {
+        // measureData (例: {'G': [{f:12, t:'note'}, {f:'h', t:'hammer'}], 'D': [{f:10, t:'note'}]} )
+        // elementsInString (例: [{f:12, t:'note'}, {f:'h', t:'hammer'}])
+        function calculateVisualWidthForStringData(elementsInString) {
             let currentWidth = 0;
-            const contentElements = elementsInMeasure; 
-
-            contentElements.forEach((el, idx) => {
+            elementsInString.forEach((el, idx) => {
                 currentWidth += getElementDisplayWidth(el);
-                if (!TECHNIQUE_SYMBOLS.includes(String(el.f).toLowerCase()) && idx < contentElements.length - 1 && !TECHNIQUE_SYMBOLS.includes(String(contentElements[idx + 1]?.f).toLowerCase())) {
+                // 次の要素がテクニック記号でなければ、ハイフンの幅を追加
+                if (!TECHNIQUE_SYMBOLS.includes(String(el.f).toLowerCase()) && 
+                    idx < elementsInString.length - 1 && 
+                    !TECHNIQUE_SYMBOLS.includes(String(elementsInString[idx + 1]?.f).toLowerCase())) {
                     currentWidth += BASE_HYPHEN_WIDTH;
                 }
             });
             return currentWidth;
         }
+
 
         function renderTab() {
             tabDisplay.innerHTML = ''; 
@@ -143,11 +148,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 initializeTab();
             }
 
+            // 各小節の最大幅を事前に計算する
+            const measureMaxContentWidths = tabData.map(measureData => {
+                let maxMeasureWidth = 0;
+                STRING_NAMES.forEach(stringName => {
+                    const elements = measureData[stringName] || [];
+                    const stringWidth = calculateVisualWidthForStringData(elements);
+                    if (stringWidth > maxMeasureWidth) {
+                        maxMeasureWidth = stringWidth;
+                    }
+                });
+                // 各小節は最低でもこれだけの幅を確保したい場合（例: 4つのハイフンと数字1つ）
+                // ただし、これは動的に幅を調整するため、強制的な最低幅が必要なければ削除しても良い
+                return Math.max(maxMeasureWidth, 4); // 例: 最低4文字幅を保証
+            });
+
+
             tabData.forEach((measureData, measureIdx) => {
                 currentLineMeasures.push(measureData);
 
                 if (currentLineMeasures.length === MEASURES_PER_LINE || measureIdx === tabData.length - 1) {
-                    renderTabLine(sectionMeasuresStartIndex, currentLineMeasures);
+                    // この行の各小節の実際の最大幅を渡す
+                    const widthsForLine = measureMaxContentWidths.slice(sectionMeasuresStartIndex, measureIdx + 1);
+                    renderTabLine(sectionMeasuresStartIndex, currentLineMeasures, widthsForLine);
                     currentLineMeasures = [];
                     sectionMeasuresStartIndex = measureIdx + 1;
                 }
@@ -156,7 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
             highlightCursor();
         }
 
-        function renderTabLine(startIndex, measuresInLine) {
+        // renderTabLine 関数のシグネチャとロジックを修正
+        function renderTabLine(startIndex, measuresInLine, widthsForLine) {
             let sectionHtml = '';
 
             let measureNumbersLine = [];
@@ -169,12 +193,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const measureNum = actualMeasureIndex + 1;
                 const measureStr = String(measureNum);
                 
+                // その小節の実際の最大幅を使用
+                const currentMeasureCalculatedWidth = widthsForLine[idx]; 
+
                 let currentMeasureStartCharOffsetInLine; 
 
                 if (idx === 0) { 
                     currentMeasureStartCharOffsetInLine = stringNameAndPipeDisplayWidth;
                 } else { 
-                    currentMeasureStartCharOffsetInLine = FIXED_MEASURE_CONTENT_WIDTH + 1; 
+                    // 以前はFIXED_MEASURE_CONTENT_WIDTHを使用していたが、動的に変更された幅を使用
+                    const prevMeasureCalculatedWidth = widthsForLine[idx - 1]; 
+                    currentMeasureStartCharOffsetInLine = prevMeasureCalculatedWidth + 1; // 前の小節の幅 +  '|'
                 }
 
                 const absoluteBarlinePosition = currentTotalCharOffset + currentMeasureStartCharOffsetInLine;
@@ -205,13 +234,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     let measureString = '';
                     elements.forEach((el, elIdx) => {
                         measureString += (typeof el.f === 'number' ? String(el.f) : el.f);
-                        if (!TECHNIQUE_SYMBOLS.includes(String(el.f).toLowerCase()) && (elIdx === elements.length - 1 || !TECHNIQUE_SYMBOLS.includes(String(elements[elIdx + 1]?.f).toLowerCase()))) {
+                        // 次の要素がテクニック記号でなければハイフンを追加
+                        if (!TECHNIQUE_SYMBOLS.includes(String(el.f).toLowerCase()) && 
+                            (elIdx === elements.length - 1 || !TECHNIQUE_SYMBOLS.includes(String(elements[elIdx + 1]?.f).toLowerCase()))) {
                             measureString += '-';
                         }
                     });
                     
-                    const currentContentVisualWidth = calculateActualContentWidth(elements);
-                    const paddingNeeded = FIXED_MEASURE_CONTENT_WIDTH - currentContentVisualWidth;
+                    // その小節の実際の最大幅を使用
+                    const currentMeasureCalculatedWidth = widthsForLine[idx];
+                    const currentContentVisualWidth = calculateVisualWidthForStringData(elements); // 全弦のコンテンツ幅を計算
+                    const paddingNeeded = currentMeasureCalculatedWidth - currentContentVisualWidth;
                     measureString += '-'.repeat(Math.max(0, paddingNeeded));
                     
                     measureString += '|'; 
@@ -256,15 +289,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const lineStartMeasureIndex = currentLineIndex * MEASURES_PER_LINE;
             const measuresInCurrentLine = tabData.slice(lineStartMeasureIndex, lineStartMeasureIndex + MEASURES_PER_LINE);
 
+            // この行の各小節の実際の最大幅を計算し直す（カーソル移動時にも正確な位置を特定するため）
+            const widthsForLine = measuresInCurrentLine.map(measureData => {
+                let maxMeasureWidth = 0;
+                STRING_NAMES.forEach(stringName => {
+                    const elements = measureData[stringName] || [];
+                    const stringWidth = calculateVisualWidthForStringData(elements);
+                    if (stringWidth > maxMeasureWidth) {
+                        maxMeasureWidth = stringWidth;
+                    }
+                });
+                return Math.max(maxMeasureWidth, 4); // renderTab() と同様の最低幅を保証
+            });
+
+
             charOffset += STRING_NAMES[activeStringIndex].length + 1; 
 
             for (let j = 0; j < (activeMeasureIndex - lineStartMeasureIndex); j++) {
-                charOffset += FIXED_MEASURE_CONTENT_WIDTH + 1; 
+                // 以前はFIXED_MEASURE_CONTENT_WIDTHを使用していたが、動的に変更された幅を使用
+                charOffset += widthsForLine[j] + 1; // その小節の幅 + '|'
             }
             
             for (let colIdx = 0; colIdx < activeColumnIndex; colIdx++) {
                 const el = targetStringDataContent[colIdx];
                 charOffset += getElementDisplayWidth(el);
+                // 次の要素がテクニック記号でなければハイフンを追加
                 if (!TECHNIQUE_SYMBOLS.includes(String(el.f).toLowerCase())) { 
                     if (colIdx < targetStringDataContent.length -1) {
                         if (!TECHNIQUE_SYMBOLS.includes(String(targetStringDataContent[colIdx + 1]?.f).toLowerCase())) { 
@@ -466,10 +515,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let fullTabString = '';
             let processedMeasuresCount = 0;
+
+            // 各小節の最大幅を事前に計算する
+            const measureMaxContentWidths = tabData.map(measureData => {
+                let maxMeasureWidth = 0;
+                STRING_NAMES.forEach(stringName => {
+                    const elements = measureData[stringName] || [];
+                    const stringWidth = calculateVisualWidthForStringData(elements);
+                    if (stringWidth > maxMeasureWidth) {
+                        maxMeasureWidth = stringWidth;
+                    }
+                });
+                return Math.max(maxMeasureWidth, 4); 
+            });
             
             while (processedMeasuresCount < tabData.length) {
                 const lineMeasures = tabData.slice(processedMeasuresCount, processedMeasuresCount + MEASURES_PER_LINE);
-                
+                const widthsForLine = measureMaxContentWidths.slice(processedMeasuresCount, processedMeasuresCount + MEASURES_PER_LINE);
+
                 let measureNumbersLine = [];
                 let currentTotalCharOffset = 0; 
                 const stringNameAndPipeDisplayWidth = STRING_NAMES[0].length + 1; 
@@ -479,11 +542,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const measureNum = actualMeasureIndex + 1;
                     const measureStr = String(measureNum);
                     
+                    const currentMeasureCalculatedWidth = widthsForLine[idxInLine]; 
+
                     let currentMeasureStartCharOffsetInLine;
                     if (idxInLine === 0) { 
                         currentMeasureStartCharOffsetInLine = stringNameAndPipeDisplayWidth;
                     } else { 
-                        currentMeasureStartCharOffsetInLine = FIXED_MEASURE_CONTENT_WIDTH + 1; 
+                        const prevMeasureCalculatedWidth = widthsForLine[idxInLine - 1]; 
+                        currentMeasureStartCharOffsetInLine = prevMeasureCalculatedWidth + 1; 
                     }
                     
                     const absoluteNumPosition = currentTotalCharOffset + currentMeasureStartCharOffsetInLine;
@@ -513,8 +579,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
 
-                        const currentContentVisualWidth = calculateActualContentWidth(elements);
-                        const paddingNeeded = FIXED_MEASURE_CONTENT_WIDTH - currentContentVisualWidth;
+                        const currentMeasureCalculatedWidth = widthsForLine[idxInLine];
+                        const currentContentVisualWidth = calculateVisualWidthForStringData(elements);
+                        const paddingNeeded = currentMeasureCalculatedWidth - currentContentVisualWidth;
                         measureString += '-'.repeat(Math.max(0, paddingNeeded));
                         
                         measureString += '|'; 
@@ -560,9 +627,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let fullTabString = '';
             let processedMeasuresCount = 0;
+
+            // 各小節の最大幅を事前に計算する
+            const measureMaxContentWidths = tabData.map(measureData => {
+                let maxMeasureWidth = 0;
+                STRING_NAMES.forEach(stringName => {
+                    const elements = measureData[stringName] || [];
+                    const stringWidth = calculateVisualWidthForStringData(elements);
+                    if (stringWidth > maxMeasureWidth) {
+                        maxMeasureWidth = stringWidth;
+                    }
+                });
+                return Math.max(maxMeasureWidth, 4); 
+            });
             
             while (processedMeasuresCount < tabData.length) {
                 const lineMeasures = tabData.slice(processedMeasuresCount, processedMeasuresCount + MEASURES_PER_LINE);
+                const widthsForLine = measureMaxContentWidths.slice(processedMeasuresCount, processedMeasuresCount + MEASURES_PER_LINE);
                 
                 let measureNumbersLine = [];
                 let currentTotalCharOffset = 0; 
@@ -573,11 +654,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const measureNum = actualMeasureIndex + 1;
                     const measureStr = String(measureNum);
                     
+                    const currentMeasureCalculatedWidth = widthsForLine[idxInLine]; 
+
                     let currentMeasureStartCharOffsetInLine;
                     if (idxInLine === 0) { 
                         currentMeasureStartCharOffsetInLine = stringNameAndPipeDisplayWidth;
                     } else { 
-                        currentMeasureStartCharOffsetInLine = FIXED_MEASURE_CONTENT_WIDTH + 1; 
+                        const prevMeasureCalculatedWidth = widthsForLine[idxInLine - 1]; 
+                        currentMeasureStartCharOffsetInLine = prevMeasureCalculatedWidth + 1; 
                     }
                     
                     const absoluteNumPosition = currentTotalCharOffset + currentMeasureStartCharOffsetInLine;
@@ -607,8 +691,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
 
-                        const currentContentVisualWidth = calculateActualContentWidth(elements);
-                        const paddingNeeded = FIXED_MEASURE_CONTENT_WIDTH - currentContentVisualWidth;
+                        const currentMeasureCalculatedWidth = widthsForLine[idxInLine];
+                        const currentContentVisualWidth = calculateVisualWidthForStringData(elements);
+                        const paddingNeeded = currentMeasureCalculatedWidth - currentContentVisualWidth;
                         measureString += '-'.repeat(Math.max(0, paddingNeeded));
                         
                         measureString += '|'; 
@@ -682,8 +767,8 @@ const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 for (let octave = 0; octave <= 5; octave++) {
     notes.forEach(note => {
-        const midiNoteNumber = (octave * 12) + notes.indexOf(note); // ★ 修正点
-        if (midiNoteNumber >= 20 && midiNoteNumber <= 80) {
+        const midiNoteNumber = (octave * 12) + notes.indexOf(note) + MIDI_NOTES['C']; // C0のMIDIノートを基準にオフセット
+        if (midiNoteNumber >= 20 && midiNoteNumber <= 80) { // 一般的なベースの範囲 (B0 ~ C5くらい)
             const option = document.createElement('option');
             option.value = note + octave;
             option.textContent = note + octave;
@@ -835,10 +920,15 @@ for (let octave = 0; octave <= 5; octave++) {
         // 初期化と自動読み込み
         loadTabDataFromLocalStorage();  // ← チューニング・弦構成の読み込みが先！
         initializeTuningUI(); // Initialize the UI based on loaded tuning and string names
-        renderTab();
-        activeMeasureIndex = 0;
-        activeColumnIndex = 0;
-        activeStringIndex = NUM_STRINGS - 1; 
+        // renderTab(); // renderTabはloadTabDataFromLocalStorage内で呼ばれるので不要
+        // activeMeasureIndex, activeColumnIndex, activeStringIndexもloadTabDataFromLocalStorageで設定される
+
+        // 初期表示後の微調整（念のため）
+        activeMeasureIndex = Math.max(0, Math.min(activeMeasureIndex, tabData.length - 1));
+        const currentStringDataContent = tabData[activeMeasureIndex]?.[STRING_NAMES[activeStringIndex]] || [];
+        activeColumnIndex = Math.max(0, Math.min(activeColumnIndex, currentStringDataContent.length)); 
+        activeStringIndex = Math.max(0, Math.min(activeStringIndex, NUM_STRINGS - 1)); 
+
         highlightCursor();
         displayLuckyFret(); // ページ読み込み時にラッキーフレットを表示
 
@@ -947,6 +1037,7 @@ for (let octave = 0; octave <= 5; octave++) {
                 lastInputWasNumber = true;
                 lastInputTime = currentTime;
             } else if (e.key === ' ') {
+                e.preventDefault(); // ★ ここを追加
                 insertElementAtCursor('-', 'rest');
                 lastInputWasNumber = false; 
             } else if (e.key.toLowerCase() === 'h') {
@@ -958,7 +1049,7 @@ for (let octave = 0; octave <= 5; octave++) {
             } else if (e.key === '/') {
                 insertElementAtCursor('/', 'slide-up');
                 lastInputWasNumber = false;
-            } else if (e.key === '\\') {
+            } else if (e.key === '\\') { // ★ バックスラッシュはエスケープが必要
                 insertElementAtCursor('\\', 'slide-down');
                 lastInputWasNumber = false;
             } else if (e.key.toLowerCase() === 'x') {
