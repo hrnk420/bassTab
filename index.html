@@ -13,7 +13,7 @@
 </head>
 <body>
 
-    <div id="auth-container" class="auth-container">
+    <div id="auth-container" class="auth-container" style="display: none;">
         <div class="auth-box">
             <h2>簡易ベースTAB譜エディター</h2>
             <p>このツールはパスワードで保護されています。</p>
@@ -26,8 +26,7 @@
         </div>
     </div>
 
-    <main id="app-content" style="display:none;">
-        <header>
+    <main id="app-content"> <header>
             <h1>簡易ベースTAB譜エディター</h1>
         </header>
 
@@ -37,7 +36,8 @@
             <div class="controls-grid">
                 <div class="controls-group">
                     <h3>入力・編集</h3>
-                    <div class="input-controls-grid">
+                    <input type="number" id="fret-input" placeholder="フレット番号入力 (スマホ用)">
+                    <div id="input-controls-grid" class="input-controls-grid">
                         <button id="add-hammer-btn">h (ハンマリング)</button>
                         <button id="add-pull-btn">p (プリング)</button>
                         <button id="add-slide-up-btn">/ (スライド↑)</button>
@@ -97,6 +97,12 @@
             <div class="section-container">
                 <div class="tuning-controls">
                     <h2>チューニング設定</h2>
+                    <div class="tuning-preset-select">
+                        <label for="string-count-select">弦の数:</label>
+                        <select id="string-count-select"></select>
+                        <label for="default-tuning-select">プリセットチューニング:</label>
+                        <select id="default-tuning-select"></select>
+                    </div>
                     <div id="tuning-options"></div>
                     <button id="apply-tuning-btn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
@@ -130,13 +136,13 @@
         <footer class="how-to-use">
             <p>
                 <span class="how-to-use-title">使い方:</span><br>
-                1. <strong>音価を選択</strong>し、数字キー(0〜9)でフレット番号を入力します。<br>
+                1. <strong>音価を選択</strong>し、数字キー(0〜9)または「フレット番号入力」でフレット番号を入力します。<br>
                 2. h,p,S,P,/,\,xキーで対応する奏法記号が入力されます。 <br>
                 3. スペースキーで<strong>選択した音価の休符</strong>を入力します。 <br>
-                4. ↑↓キーで弦を切り替えられます。 <br>
-                5. ←→キーでカーソルを移動させられます(Shift+矢印キーで小節単位移動)。<br>
+                4. ↑↓キーまたはTAB譜エリアの縦方向スワイプで弦を切り替えられます。 <br>
+                5. ←→キーまたはTAB譜エリアの横方向スワイプでカーソルを移動させられます(Shift+矢印キーで小節単位移動)。<br>
                 6. Backspaceキーでカーソル位置の音符/休符を削除できます。 <br>
-                7. チューニング設定で各弦の音程を変更できます。 <br>
+                7. チューニング設定で各弦の音程を変更できます。また、4弦～6弦ベースのプリセットを選択できます。<br>
                 8. メトロノームでテンポを合わせて練習できます。 
             </p>
         </footer>

@@ -1,34 +1,11 @@
-// ====== パスワード認証機能ここから ======
-const CORRECT_PASSWORD = "basstab"; // ★★★ ここに希望するパスワードを設定してください ★★★
-
 document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
-    const passwordInput = document.getElementById('password-input');
-    const loginButton = document.getElementById('login-button');
-    const authMessage = document.getElementById('auth-message');
     const appContent = document.getElementById('app-content');
 
-    const checkPassword = () => {
-        if (passwordInput.value === CORRECT_PASSWORD) {
-            authContainer.style.display = 'none';
-            appContent.style.display = 'block';
-            initializeApp();
-        } else {
-            authMessage.textContent = "パスワードが間違っています。";
-            passwordInput.value = '';
-        }
-    };
-
-    loginButton.addEventListener('click', checkPassword);
-    passwordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            checkPassword();
-        }
-    });
-
-    authContainer.style.display = 'flex';
-    appContent.style.display = 'none';
-    // ====== パスワード認証機能ここまで ======
+    // パスワード認証機能を廃止し、直接アプリコンテンツを表示
+    authContainer.style.display = 'none';
+    appContent.style.display = 'block';
+    initializeApp();
 
     function initializeApp() {
         const tabDisplay = document.getElementById('tab-display');
@@ -38,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const addSlideDownBtn = document.getElementById('add-slide-down-btn');
         const addMuteBtn = document.getElementById('add-mute-btn');
         const addSlapBtn = document.getElementById('add-slap-btn');
-        const addPopBtn = document.getElementById('add-pop-btn');
+        const addPopBtn = document = document.getElementById('add-pop-btn');
         const deleteLastBtn = document.getElementById('delete-last-btn');
         const add4MeasuresBtn = document.getElementById('add-4-measures-btn');
         const clearAllBtn = document.getElementById('clear-all-btn');
@@ -53,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tuningOptionsDiv = document.getElementById('tuning-options');
         const applyTuningBtn = document.getElementById('apply-tuning-btn');
+        const stringCountSelect = document.getElementById('string-count-select');
+        const defaultTuningSelect = document.getElementById('default-tuning-select');
+        const fretInput = document.getElementById('fret-input');
+        const inputControlsGrid = document.getElementById('input-controls-grid');
 
         // --- メトロノーム関連 ---
         const bpmInput = document.getElementById('bpm-input');
@@ -69,16 +50,27 @@ document.addEventListener('DOMContentLoaded', () => {
             'A': 21, 'A#': 22, 'Bb': 22, 'B': 23
         };
 
-        let STRING_NAMES = ['G', 'D', 'A', 'E', 'B'];
-        let NUM_STRINGS = 5;
-        // 5弦ベースの標準チューニング (B1, E2, A2, D3, G3)
-        let currentTuning = {
-            'G': 55, // G3
-            'D': 50, // D3
-            'A': 45, // A2
-            'E': 40, // E2
-            'B': 35, // B1
+        const DEFAULT_TUNINGS = {
+            '4': {
+                name: '4弦ベース (E標準)',
+                strings: ['G', 'D', 'A', 'E'],
+                tuning: { 'G': 55, 'D': 50, 'A': 45, 'E': 40 }
+            },
+            '5': {
+                name: '5弦ベース (B標準)',
+                strings: ['G', 'D', 'A', 'E', 'B'],
+                tuning: { 'G': 55, 'D': 50, 'A': 45, 'E': 40, 'B': 35 }
+            },
+            '6': {
+                name: '6弦ベース (B標準)',
+                strings: ['C', 'G', 'D', 'A', 'E', 'B'],
+                tuning: { 'C': 60, 'G': 55, 'D': 50, 'A': 45, 'E': 40, 'B': 35 }
+            }
         };
+
+        let STRING_NAMES = DEFAULT_TUNINGS['5'].strings;
+        let NUM_STRINGS = 5;
+        let currentTuning = DEFAULT_TUNINGS['5'].tuning;
         
         let tabData = [];
         let activeStringIndex = NUM_STRINGS - 1;
@@ -87,21 +79,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const MEASURES_PER_LINE = 4;
         const INITIAL_MEASURES = 4;
-        const SIXTEENTH_NOTE_WIDTH = 2;
+        // 16分音符以外の音符の幅計算の基準単位
+        const BASE_NOTE_UNIT_WIDTH = 2; 
 
         let lastInputWasNumber = false;
         let lastInputTime = 0;
         const DOUBLE_DIGIT_TIMEOUT = 500;
 
+        // 音符や記号の表示幅を計算する関数
         function getElementDisplayWidth(element) {
-            if (element.t === 'technique') {
+            if (element.t === 'technique' || element.f === 'x') {
                 return 1;
             }
             const duration = element.d || 0.25;
             const widthMultiplier = duration / 0.0625;
-            const fretStr = String(element.f);
-            const baseWidth = fretStr.length > 1 ? fretStr.length : 1;
-            return Math.max(baseWidth, widthMultiplier * SIXTEENTH_NOTE_WIDTH);
+            
+            // 数字の場合は文字数と音価に応じて幅を決定
+            if (typeof element.f === 'number') {
+                const fretStr = String(element.f);
+                if (duration === 0.0625) { // 16分音符の場合
+                    // 16分音符は常にフレット番号の文字数 + 1 (ハイフン1つ分) の幅
+                    return fretStr.length + 1;
+                } else { // それ以外の音価の場合
+                    // それ以外の音符は、フレット番号の文字数と、音価に応じた基本幅の大きい方
+                    const baseWidthForDuration = Math.round(widthMultiplier * BASE_NOTE_UNIT_WIDTH);
+                    return Math.max(fretStr.length, baseWidthForDuration);
+                }
+            }
+            // 休符 '-' の場合
+            return Math.max(1, Math.round(widthMultiplier * BASE_NOTE_UNIT_WIDTH));
         }
 
         function renderTab() {
@@ -192,7 +198,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!stringLine) return;
 
             const stringContent = stringLine.querySelector('.tab-string-content');
-            const charWidth = parseFloat(getComputedStyle(tabDisplay).fontSize) * 0.6;
+            const tempSpan = document.createElement('span');
+            tempSpan.style.fontFamily = 'var(--font-mono)';
+            tempSpan.style.fontSize = getComputedStyle(tabDisplay).fontSize;
+            tempSpan.style.position = 'absolute';
+            tempSpan.style.visibility = 'hidden';
+            tempSpan.textContent = '-';
+            document.body.appendChild(tempSpan);
+            const charWidth = tempSpan.offsetWidth;
+            document.body.removeChild(tempSpan);
+
             let leftOffset = 0;
 
             const measureIndexInLine = activeMeasureIndex % MEASURES_PER_LINE;
@@ -255,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(!currentMeasure[currentStringName]) currentMeasure[currentStringName] = [];
             const currentStringData = currentMeasure[currentStringName];
             activeColumnIndex = Math.min(activeColumnIndex, currentStringData.length);
-            const durationForElement = (type === 'technique') ? 0 : currentDuration;
+            const durationForElement = (type === 'technique' || type === 'mute') ? 0 : currentDuration;
             const newElement = { f: fretOrSymbol, t: type, d: durationForElement };
             currentStringData.splice(activeColumnIndex, 0, newElement);
             activeColumnIndex++;
@@ -275,6 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeMeasureIndex--;
                 const prevMeasureStringData = tabData[activeMeasureIndex][STRING_NAMES[activeStringIndex]] || [];
                 activeColumnIndex = prevMeasureStringData.length;
+                if(activeColumnIndex > 0) {
+                    prevMeasureStringData.splice(activeColumnIndex - 1, 1);
+                    activeColumnIndex--;
+                }
             }
             renderTab();
             saveTabDataToLocalStorage();
@@ -285,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('bassTabEditorData', JSON.stringify(tabData));
                 localStorage.setItem('bassTabEditorTuning', JSON.stringify(currentTuning));
                 localStorage.setItem('bassTabEditorStringNames', JSON.stringify(STRING_NAMES));
+                localStorage.setItem('bassTabEditorNumStrings', NUM_STRINGS);
             } catch (e) {
                 console.error('Failed to save data:', e);
             }
@@ -292,13 +312,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function loadTabDataFromLocalStorage() {
             try {
+                const savedNumStrings = localStorage.getItem('bassTabEditorNumStrings');
+                if (savedNumStrings) {
+                    NUM_STRINGS = parseInt(savedNumStrings, 10);
+                    stringCountSelect.value = NUM_STRINGS;
+                }
+
                 const savedStringNames = localStorage.getItem('bassTabEditorStringNames');
-                if (savedStringNames) STRING_NAMES = JSON.parse(savedStringNames);
-                NUM_STRINGS = STRING_NAMES.length;
+                if (savedStringNames) {
+                    STRING_NAMES = JSON.parse(savedStringNames);
+                } else {
+                    STRING_NAMES = DEFAULT_TUNINGS[NUM_STRINGS].strings;
+                }
 
                 const savedTuning = localStorage.getItem('bassTabEditorTuning');
-                if (savedTuning) currentTuning = JSON.parse(savedTuning);
-
+                if (savedTuning) {
+                    currentTuning = JSON.parse(savedTuning);
+                } else {
+                    currentTuning = DEFAULT_TUNINGS[NUM_STRINGS].tuning;
+                }
+                
                 const savedData = localStorage.getItem('bassTabEditorData');
                 if (savedData) {
                     tabData = JSON.parse(savedData);
@@ -495,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gainNode.connect(audioContext.destination);
 
             oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+            oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
             gainNode.gain.setValueAtTime(1, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
 
@@ -536,6 +569,43 @@ document.addEventListener('DOMContentLoaded', () => {
         displayLuckyFret();
         renderTab();
 
+        stringCountSelect.addEventListener('change', (e) => {
+            const newNumStrings = parseInt(e.target.value, 10);
+            if (newNumStrings !== NUM_STRINGS) {
+                if (confirm(`${newNumStrings}弦ベースに切り替えますか？現在のTAB譜データはクリアされます。`)) {
+                    NUM_STRINGS = newNumStrings;
+                    STRING_NAMES = DEFAULT_TUNINGS[NUM_STRINGS].strings;
+                    currentTuning = DEFAULT_TUNINGS[NUM_STRINGS].tuning;
+                    initializeTab();
+                    initializeTuningUI();
+                    populateDefaultTuningSelect();
+                    defaultTuningSelect.value = NUM_STRINGS;
+                    saveTabDataToLocalStorage();
+                } else {
+                    stringCountSelect.value = NUM_STRINGS;
+                }
+            }
+        });
+
+        defaultTuningSelect.addEventListener('change', (e) => {
+            const selectedDefault = e.target.value;
+            if (selectedDefault && DEFAULT_TUNINGS[selectedDefault]) {
+                currentTuning = { ...DEFAULT_TUNINGS[selectedDefault].tuning };
+                initializeTuningUI();
+                saveTabDataToLocalStorage();
+                alert(`${DEFAULT_TUNINGS[selectedDefault].name}が適用されました！`);
+            }
+        });
+
+        // スマホでの数字入力対応
+        fretInput.addEventListener('input', (e) => {
+            const fretValue = parseInt(e.target.value, 10);
+            if (!isNaN(fretValue)) {
+                insertElementAtCursor(fretValue, 'note');
+                e.target.value = '';
+            }
+        });
+
         addHammerBtn.addEventListener('click', () => insertElementAtCursor('h', 'technique'));
         addPullBtn.addEventListener('click', () => insertElementAtCursor('p', 'technique'));
         addSlideUpBtn.addEventListener('click', () => insertElementAtCursor('/', 'technique'));
@@ -563,8 +633,13 @@ document.addEventListener('DOMContentLoaded', () => {
             currentDuration = parseFloat(target.dataset.duration);
         });
 
+        // PCキーボードからの入力イベント
         document.addEventListener('keydown', (e) => {
-            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) && e.target !== fretInput) return;
+
+            if (e.target === fretInput && e.key >= '0' && e.key <= '9') {
+                return;
+            }
 
             const keyMap = {
                 'ArrowUp': () => { activeStringIndex = Math.max(0, activeStringIndex - 1); },
@@ -620,5 +695,67 @@ document.addEventListener('DOMContentLoaded', () => {
                  lastInputWasNumber = false;
             }
         });
+
+        // スマホでのフリック/スワイプ操作を矢印キーに変換する
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        tabDisplay.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
+        });
+
+        tabDisplay.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1) {
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+
+                const dx = touchEndX - touchStartX;
+                const dy = touchEndY - touchStartY;
+
+                const swipeThreshold = 30;
+
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
+                    if (dx > 0) {
+                        const currentLine = (tabData[activeMeasureIndex]?.[STRING_NAMES[activeStringIndex]]) || [];
+                        activeColumnIndex = Math.min(currentLine.length, activeColumnIndex + 1);
+                    } else {
+                        activeColumnIndex = Math.max(0, activeColumnIndex - 1);
+                    }
+                } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > swipeThreshold) {
+                    if (dy > 0) {
+                        activeStringIndex = Math.min(NUM_STRINGS - 1, activeStringIndex + 1);
+                    } else {
+                        activeStringIndex = Math.max(0, activeStringIndex - 1);
+                    }
+                }
+                renderTab();
+            }
+        });
+
+        // 弦数選択の初期化とイベントリスナー
+        for (const count in DEFAULT_TUNINGS) {
+            const option = document.createElement('option');
+            option.value = count;
+            option.textContent = DEFAULT_TUNINGS[count].name;
+            stringCountSelect.appendChild(option);
+        }
+        stringCountSelect.value = NUM_STRINGS;
+
+        function populateDefaultTuningSelect() {
+            defaultTuningSelect.innerHTML = '<option value="">カスタム</option>';
+            for (const count in DEFAULT_TUNINGS) {
+                const tuningData = DEFAULT_TUNINGS[count];
+                if (parseInt(count, 10) === NUM_STRINGS) {
+                    const option = document.createElement('option');
+                    option.value = count;
+                    option.textContent = tuningData.name;
+                    defaultTuningSelect.appendChild(option);
+                }
+            }
+        }
+        populateDefaultTuningSelect();
     }
 });
