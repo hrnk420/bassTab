@@ -4,60 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易ベースTAB譜エディター</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* style.cssとは別に、認証画面用のスタイルを追加 */
-        .auth-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh; /* 画面全体を使う */
-            background-color: #f4f4f4;
-            color: #333;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .auth-box {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-        }
-        .auth-box h2 {
-            color: #0056b3;
-            margin-bottom: 20px;
-        }
-        .auth-box input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-        .auth-box button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s;
-        }
-        .auth-box button:hover {
-            background-color: #0056b3;
-        }
-        .auth-message {
-            color: red;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-    </style>
 </head>
 <body>
 
@@ -66,83 +18,118 @@
             <h2>簡易ベースTAB譜エディター</h2>
             <p>このツールはパスワードで保護されています。</p>
             <input type="password" id="password-input" placeholder="パスワードを入力">
-            <button id="login-button">ログイン</button>
+            <button id="login-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                ログイン
+            </button>
             <p id="auth-message" class="auth-message"></p>
         </div>
     </div>
 
-    <div id="app-content" style="display:none;">
-        <h1>簡易ベースTAB譜エディター</h1>
+    <main id="app-content" style="display:none;">
+        <header>
+            <h1>簡易ベースTAB譜エディター</h1>
+        </header>
 
-        <div class="tab-editor-container">
-            <div id="tab-display" class="tab-display">
-            </div>
+        <section class="tab-editor-container">
+            <div id="tab-display"></div>
 
-            <div class="main-controls-grid">
-                <div class="controls-group input-controls">
+            <div class="controls-grid">
+                <div class="controls-group">
                     <h3>入力・編集</h3>
-                    <button id="add-hammer-btn">H(ハンマリング)</button>
-                    <button id="add-pull-btn">P(プリング)</button>
-                    <button id="add-slide-up-btn">/(スライド↑)</button>
-                    <button id="add-slide-down-btn">\(スライド↓)</button>
-                    <button id="add-mute-btn">X(ミュート)</button>
-                    <button id="delete-last-btn">削除</button>
+                    <div class="input-controls-grid">
+                        <button id="add-hammer-btn">H(ハンマリング)</button>
+                        <button id="add-pull-btn">P(プリング)</button>
+                        <button id="add-slide-up-btn">/(スライド↑)</button>
+                        <button id="add-slide-down-btn">\(スライド↓)</button>
+                        <button id="add-mute-btn">X(ミュート)</button>
+                        <button id="delete-last-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                            削除
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="controls-group tab-structure-controls">
+                <div class="controls-group">
                     <h3>小節操作</h3>
-                    <button id="add-4-measures-btn">小節を追加</button>
-                    <button id="clear-all-btn">全てクリア</button>
+                    <button id="add-4-measures-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        小節を追加
+                    </button>
+                    <button id="clear-all-btn">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        全てクリア
+                    </button>
                 </div>
 
-                <div class="controls-group file-share-controls">
+                <div class="controls-group">
                     <h3>保存・共有</h3>
-                    <p class="recommend-image-save">
-                        TAB譜の保存・共有は「画像として保存 (PNG)」を推奨します。 <br>
-                        テキストでの保存も可能ですが、読み込み時に表示が崩れる場合があります。 
-                    </p>
-                    <button id="save-tab-btn">保存 (TXT)</button>
-                    <button id="copy-text-btn">テキストをコピー</button>
-                    <button id="export-image-btn">画像として保存 (PNG)</button>
+                     <p class="recommend-image-save">TAB譜の保存・共有は「画像として保存 (PNG)」を推奨します。<br>テキストでの保存も可能ですが、表示が崩れる場合があります。</p>
+                    <button id="save-tab-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        保存 (TXT)
+                    </button>
+                    <button id="copy-text-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        テキストをコピー
+                    </button>
+                    <button id="export-image-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        画像として保存 (PNG)
+                    </button>
                 </div>
             </div>
 
-            <div class="section-container tuning-metronome">
+            <div class="section-container">
                 <div class="tuning-controls">
                     <h2>チューニング設定</h2>
-                    <div id="tuning-options">
-                        </div>
-                    <button id="apply-tuning-btn">チューニングを適用</button>
+                    <div id="tuning-options"></div>
+                    <button id="apply-tuning-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                        チューニングを適用
+                    </button>
                 </div>
 
                 <div class="metronome-controls">
                     <h2>メトロノーム</h2>
-                    <label for="bpm-input">テンポ (BPM):</label>
-                    <input type="number" id="bpm-input" value="120" min="40" max="300">
-                    <button id="metronome-toggle-btn">再生/停止</button>
+                    <div class="metronome-controls-wrapper">
+                        <label for="bpm-input">テンポ (BPM):</label>
+                        <input type="number" id="bpm-input" value="120" min="40" max="300">
+                        <button id="metronome-toggle-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            再生
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="humor-feature">
                     <h2>今日のラッキーフレット</h2>
                     <p id="lucky-fret-display"></p>
-                    <button id="refresh-lucky-fret-btn">もう一度占う</button>
+                    <button id="refresh-lucky-fret-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        もう一度占う
+                    </button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <p class="how-to-use">
-            <span class="how-to-use-title">使い方:</span><br>
-            1. 数字キー(0〜9)でフレット番号を入力します(2桁入力時は素早く続けて入力)<br>
-            2. H,P,/,\,Xキーで対応する奏法記号が入力されます。 <br>
-            3. スペースキー で休符 (`-`) を入力します。 <br>
-            4. ↑↓キーで弦を切り替えられます。 <br>
-            5. ←→キーで小節内のカーソルを移動させられます<br>(Shift+矢印キーで小節単位移動)<br>
-            6. Backspaceキーでカーソル位置の音符/休符を削除できます。 <br>
-            7. TAB譜は最初から小節線で区切られています。 <br>
-            8. チューニング設定で各弦の音程を変更できます。 <br>
-            9. メトロノームでテンポを合わせて練習できます。 
-        </p>
-    </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <footer class="how-to-use">
+            <p>
+                <span class="how-to-use-title">使い方:</span><br>
+                1. 数字キー(0〜9)でフレット番号を入力します(2桁入力時は素早く続けて入力)<br>
+                2. H,P,/,\,Xキーで対応する奏法記号が入力されます。 <br>
+                3. スペースキー で休符 (`-`) を入力します。 <br>
+                4. ↑↓キーで弦を切り替えられます。 <br>
+                5. ←→キーで小節内のカーソルを移動させられます(Shift+矢印キーで小節単位移動)<br>
+                6. Backspaceキーでカーソル位置の音符/休符を削除できます。 <br>
+                7. TAB譜は最初から小節線で区切られています。 <br>
+                8. チューニング設定で各弦の音程を変更できます。 <br>
+                9. メトロノームでテンポを合わせて練習できます。 
+            </p>
+        </footer>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

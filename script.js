@@ -899,11 +899,11 @@ for (let octave = 0; octave <= 5; octave++) {
 
                 playClick(); // 最初のクリックを即座に鳴らす
                 metronomeInterval = setInterval(playClick, intervalTime);
-                metronomeToggleButton.textContent = '停止';
+                metronomeToggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12"></rect></svg> 停止';
                 isMetronomePlaying = true;
             } else {
                 clearInterval(metronomeInterval);
-                metronomeToggleButton.textContent = '再生';
+                metronomeToggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> 再生';
                 isMetronomePlaying = false;
             }
         }
