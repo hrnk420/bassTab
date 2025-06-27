@@ -137,11 +137,17 @@ h3 {
     min-height: 200px;
     background-color: #fff;
     border-radius: 4px;
+    position: relative; /* For cursor positioning */
+}
+
+.tab-section {
+    margin-bottom: 1rem;
 }
 
 .tab-string-line {
     display: flex;
     white-space: pre;
+    align-items: center; /* Vertically align items */
 }
 
 .tab-string-name {
@@ -150,17 +156,20 @@ h3 {
     padding-right: 0.5ch;
     font-weight: 500;
     color: var(--secondary-color);
+    user-select: none;
 }
 
 .tab-string-content {
     flex-grow: 1;
     position: relative;
+    letter-spacing: 0;
+    display: flex;
+    align-items: center;
 }
 
-.measure-number-line {
-    margin-bottom: 0.5rem;
-    font-weight: bold;
+.measure-number-line .tab-string-content {
     color: var(--secondary-color);
+    font-weight: bold;
 }
 
 .active-string .tab-string-content {
@@ -169,20 +178,34 @@ h3 {
 
 .cursor {
     position: absolute;
-    width: 2px;
-    height: 100%;
+    width: 1.5px;
+    height: 1.4em;
     background-color: var(--primary-color);
     animation: blink 1s step-end infinite;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    pointer-events: none;
 }
+
 
 @keyframes blink {
     50% { opacity: 0; }
 }
 
+.note-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.fret-note, .hyphen, .padding {
+    display: inline-block;
+}
+
 /* --- Controls & Buttons --- */
 .controls-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -201,6 +224,32 @@ h3 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 0.75rem;
+}
+
+.sub-heading {
+    font-size: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-hover);
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.duration-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.5rem;
+}
+
+.duration-btn {
+    background-color: var(--secondary-color);
+}
+
+.duration-btn.active {
+    background-color: var(--primary-color);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
 button {
